@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Backtest Template</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .btn-google {
+            background-color: #4285f4;
+        }
+        .btn-google:hover {
+            background-color: #3367d6;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: fixed;
+        }
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        th {
+            background-color: #f2f6fc;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        .calculated {
+            background-color: #f8f9fa;
+            font-weight: 500;
+            padding: 10px;
+            border-radius: 4px;
+            display: block;
+        }
+        .win {
+            color: #2ecc71;
+        }
+        .loss {
+            color: #e74c3c;
+        }
+        .neutral {
+            color: #f39c12;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .summary {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f2f6fc;
+            border-radius: 8px;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .win-rate {
+            color: #2ecc71;
+        }
+        .total-profit {
+            color: #3498db;
+        }
+        .total-loss {
+            color: #e74c3c;
+        }
+        .net-profit {
+            color: #2ecc71;
+        }
+        
+        /* Google Integration Styles */
+        .google-integration {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #4285f4;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Column width adjustments */
+        .col-date { width: 120px; }
+        .col-pair { width: 100px; }
+        .col-entry { width: 120px; }
+        .col-capital { width: 120px; }
+        .col-profit-target { width: 120px; }
+        .col-loss-percent { width: 100px; }
+        .col-profit-percent { width: 100px; }
+        .col-long-sl { width: 120px; }
+        .col-long-tp { width: 120px; }
+        .col-short-sl { width: 120px; }
+        .col-short-tp { width: 120px; }
+        .col-session-high { width: 120px; }
+        .col-session-low { width: 120px; }
+        .col-long-outcome { width: 100px; }
+        .col-short-outcome { width: 100px; }
+        .col-profit-amount { width: 120px; }
+        .col-loss-amount { width: 120px; }
+        .col-actual-profit { width: 120px; }
+        .col-fees { width: 100px; }
+        .col-notes { width: 200px; }
+        .col-accumulated { width: 120px; }
+        .col-actions { width: 80px; }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+            }
+            .summary {
+                flex-direction: column;
+                gap: 15px;
+            }
+            table {
+                font-size: 12px;
+            }
+            input, select, .calculated {
+                padding: 6px;
+                font-size: 12px;
+            }
+            .google-integration {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Strategy Backtest Template</h1>
+        
+        <!-- Google Integration Section -->
+        <div class="google-integration">
+            <div id="google-signin-container">
+                <button class="btn btn-google" id="signin-btn">Sign in with Google</button>
+            </div>
+            <div id="user-info-container" style="display: none;">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <span id="user-name"></span>
+                </div>
+                <button class="btn" id="save-to-google">Save to Google Sheets</button>
+                <button class="btn" id="load-from-google">Load from Google Sheets</button>
+                <button class="btn btn-danger" id="signout-btn">Sign Out</button>
+            </div>
+        </div>
+        
+        <div id="status-message" class="status-message"></div>
+        
+        <div class="controls">
+            <button class="btn" id="addRow">Add Row</button>
+            <button class="btn btn-success" id="calculateAll">Calculate All</button>
+            <button class="btn btn-danger" id="clearAll">Clear All</button>
+            <button class="btn" id="exportData">Export Data</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="backtestTable">
+                <thead>
+                    <tr>
+                        <th class="col-date">Date</th>
+                        <th class="col-pair">Pair</th>
+                        <th class="col-entry">Entry Price</th>
+                        <th class="col-capital">Capital Invested</th>
+                        <th class="col-profit-target">Profit Target</th>
+                        <th class="col-loss-percent">% Loss (SL)</th>
+                        <th class="col-profit-percent">% Profit (TP)</th>
+                        <th class="col-long-sl">Long SL Price</th>
+                        <th class="col-long-tp">Long TP Price</th>
+                        <th class="col-short-sl">Short SL Price</th>
+                        <th class="col-short-tp">Short TP Price</th>
+                        <th class="col-session-high">Session High</th>
+                        <th class="col-session-low">Session Low</th>
+                        <th class="col-long-outcome">Long Outcome</th>
+                        <th class="col-short-outcome">Short Outcome</th>
+                        <th class="col-profit-amount">Profit Amount</th>
+                        <th class="col-loss-amount">Loss Amount</th>
+                        <th class="col-actual-profit">Actual Profit</th>
+                        <th class="col-fees">Fees Deducted</th>
+                        <th class="col-notes">Notes</th>
+                        <th class="col-accumulated">Accumulated Profit</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here dynamically -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="summary">
+            <div class="summary-item">
+                <div>Total Trades</div>
+                <div class="summary-value" id="totalTrades">0</div>
+            </div>
+            <div class="summary-item">
+                <div>Win Rate</div>
+                <div class="summary-value win-rate" id="winRate">0%</div>
+            </div>
+            <div class="summary-item">
+                <div>Total Profit</div>
+                <div class="summary-value total-profit" id="totalProfit">$0.00</div>
+            </div>
+            <div class="summary-item">
+                <div>Total Loss</div>
+                <div class="summary-value total-loss" id="totalLoss">$0.00</div>
+            </div>
+            <div class="summary-item">
+                <div>Net Profit</div>
+                <div class="summary-value net-profit" id="netProfit">$0.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.getElementById('backtestTable').getElementsByTagName('tbody')[0];
+            const addRowBtn = document.getElementById('addRow');
+            const calculateAllBtn = document.getElementById('calculateAll');
+            const clearAllBtn = document.getElementById('clearAll');
+            const exportBtn = document.getElementById('exportData');
+            const signinBtn = document.getElementById('signin-btn');
+            const signoutBtn = document.getElementById('signout-btn');
+            const saveToGoogleBtn = document.getElementById('save-to-google');
+            const loadFromGoogleBtn = document.getElementById('load-from-google');
+            const statusMessage = document.getElementById('status-message');
+            
+            // Google API variables
+            let tokenClient;
+            let accessToken = null;
+            let gapiInited = false;
+            let gisInited = false;
+            
+            // Initialize with 5 rows
+            for (let i = 0; i < 5; i++) {
+                addNewRow();
+            }
+            
+            // Event listeners
+            addRowBtn.addEventListener('click', addNewRow);
+            calculateAllBtn.addEventListener('click', calculateAll);
+            clearAllBtn.addEventListener('click', clearAll);
+            exportBtn.addEventListener('click', exportData);
+            signinBtn.addEventListener('click', handleSignIn);
+            signoutBtn.addEventListener('click', handleSignOut);
+            saveToGoogleBtn.addEventListener('click', saveToGoogleSheets);
+            loadFromGoogleBtn.addEventListener('click', loadFromGoogleSheets);
+            
+            // Google API initialization
+            function gapiLoaded() {
+                gapi.load('client', initializeGapiClient);
+            }
+            
+            async function initializeGapiClient() {
+                await gapi.client.init({
+                    apiKey: 'YOUR_API_KEY', // Replace with your API key
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+                });
+                gapiInited = true;
+                maybeEnableButtons();
+            }
+            
+            function gisLoaded() {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: 'YOUR_CLIENT_ID', // Replace with your client ID
+                    scope: 'https://www.googleapis.com/auth/spreadsheets',
+                    callback: '', // defined later
+                });
+                gisInited = true;
+                maybeEnableButtons();
+            }
+            
+            function maybeEnableButtons() {
+                if (gapiInited && gisInited) {
+                    signinBtn.style.display = 'inline-block';
+                }
+            }
+            
+            function handleSignIn() {
+                tokenClient.callback = async (resp) => {
+                    if (resp.error !== undefined) {
+                        throw (resp);
+                    }
+                    accessToken = resp.access_token;
+                    document.getElementById('google-signin-container').style.display = 'none';
+                    document.getElementById('user-info-container').style.display = 'flex';
+                    
+                    // Get user info
+                    const userInfo = await getUserInfo();
+                    document.getElementById('user-name').textContent = userInfo.name;
+                    document.getElementById('user-avatar').textContent = userInfo.name.charAt(0).toUpperCase();
+                };
+                
+                if (accessToken === null) {
+                    // Prompt user to select a Google Account and ask for consent to share their data
+                    tokenClient.requestAccessToken({prompt: 'consent'});
+                } else {
+                    // Skip display of account chooser and consent dialog for an existing session
+                    tokenClient.requestAccessToken({prompt: ''});
+                }
+            }
+            
+            function handleSignOut() {
+                accessToken = null;
+                document.getElementById('google-signin-container').style.display = 'block';
+                document.getElementById('user-info-container').style.display = 'none';
+                showStatus('Signed out successfully', 'success');
+            }
+            
+            async function getUserInfo() {
+                try {
+                    const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error getting user info:', error);
+                    showStatus('Error getting user information', 'error');
+                    return { name: 'User' };
+                }
+            }
+            
+            async function saveToGoogleSheets() {
+                if (!accessToken) {
+                    showStatus('Please sign in first', 'error');
+                    return;
+                }
+                
+                try {
+                    showStatus('Saving to Google Sheets...', 'success');
+                    
+                    // Get table data
+                    const data = getTableData();
+                    
+                    // Create a new spreadsheet or update existing one
+                    const spreadsheetId = await createOrUpdateSpreadsheet();
+                    
+                    // Clear existing data
+                    await clearSheet(spreadsheetId, 'Backtest Data');
+                    
+                    // Write headers
+                    const headers = getTableHeaders();
+                    await writeToSheet(spreadsheetId, 'Backtest Data', [headers]);
+                    
+                    // Write data
+                    if (data.length > 0) {
+                        await writeToSheet(spreadsheetId, 'Backtest Data', data);
+                    }
+                    
+                    showStatus('Data saved successfully to Google Sheets', 'success');
+                } catch (error) {
+                    console.error('Error saving to Google Sheets:', error);
+                    showStatus('Error saving to Google Sheets: ' + error.message, 'error');
+                }
+            }
+            
+            async function loadFromGoogleSheets() {
+                if (!accessToken) {
+                    showStatus('Please sign in first', 'error');
+                    return;
+                }
+                
+                try {
+                    showStatus('Loading from Google Sheets...', 'success');
+                    
+                    // Get spreadsheet ID (in a real app, you would store this or let user select)
+                    const spreadsheetId = await getSpreadsheetId();
+                    
+                    // Read data from sheet
+                    const data = await readFromSheet(spreadsheetId, 'Backtest Data');
+                    
+                    if (data && data.length > 1) { // First row is headers
+                        // Clear existing table
+                        table.innerHTML = '';
+                        
+                        // Add rows from data (skip header row)
+                        for (let i = 1; i < data.length; i++) {
+                            const row = addNewRowWithData(data[i]);
+                        }
+                        
+                        updateSummary();
+                        showStatus('Data loaded successfully from Google Sheets', 'success');
+                    } else {
+                        showStatus('No data found in Google Sheets', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading from Google Sheets:', error);
+                    showStatus('Error loading from Google Sheets: ' + error.message, 'error');
+                }
+            }
+            
+            async function createOrUpdateSpreadsheet() {
+                // In a real application, you would store the spreadsheet ID and reuse it
+                // For this example, we'll create a new spreadsheet each time
+                
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.create({
+                        properties: {
+                            title: 'Strategy Backtest Data'
+                        },
+                        sheets: [{
+                            properties: {
+                                title: 'Backtest Data'
+                            }
+                        }]
+                    });
+                    
+                    return response.result.spreadsheetId;
+                } catch (error) {
+                    console.error('Error creating spreadsheet:', error);
+                    throw error;
+                }
+            }
+            
+            async function getSpreadsheetId() {
+                // In a real application, you would retrieve the stored spreadsheet ID
+                // For this example, we'll try to find a spreadsheet with the right name
+                
+                try {
+                    const response = await gapi.client.drive.files.list({
+                        q: "name = 'Strategy Backtest Data' and mimeType = 'application/vnd.google-apps.spreadsheet'",
+                        fields: 'files(id, name)'
+                    });
+                    
+                    if (response.result.files && response.result.files.length > 0) {
+                        return response.result.files[0].id;
+                    } else {
+                        throw new Error('No spreadsheet found');
+                    }
+                } catch (error) {
+                    console.error('Error getting spreadsheet ID:', error);
+                    throw error;
+                }
+            }
+            
+            async function clearSheet(spreadsheetId, sheetName) {
+                try {
+                    await gapi.client.sheets.spreadsheets.values.clear({
+                        spreadsheetId: spreadsheetId,
+                        range: `${sheetName}!A1:Z`
+                    });
+                } catch (error) {
+                    console.error('Error clearing sheet:', error);
+                    throw error;
+                }
+            }
+            
+            async function writeToSheet(spreadsheetId, sheetName, data) {
+                try {
+                    await gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId: spreadsheetId,
+                        range: `${sheetName}!A1`,
+                        valueInputOption: 'USER_ENTERED',
+                        resource: {
+                            values: data
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error writing to sheet:', error);
+                    throw error;
+                }
+            }
+            
+            async function readFromSheet(spreadsheetId, sheetName) {
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: spreadsheetId,
+                        range: `${sheetName}!A:Z`
+                    });
+                    
+                    return response.result.values;
+                } catch (error) {
+                    console.error('Error reading from sheet:', error);
+                    throw error;
+                }
+            }
+            
+            function getTableHeaders() {
+                const headers = [];
+                const headerRow = document.getElementById('backtestTable').rows[0];
+                
+                for (let i = 0; i < headerRow.cells.length - 1; i++) {
+                    headers.push(headerRow.cells[i].textContent);
+                }
+                
+                return headers;
+            }
+            
+            function getTableData() {
+                const data = [];
+                
+                for (let i = 0; i < table.rows.length; i++) {
+                    const row = table.rows[i];
+                    const rowData = [];
+                    
+                    for (let j = 0; j < row.cells.length - 1; j++) {
+                        const cell = row.cells[j];
+                        const input = cell.querySelector('input');
+                        const span = cell.querySelector('span');
+                        
+                        if (input) {
+                            rowData.push(input.value);
+                        } else if (span) {
+                            rowData.push(span.textContent);
+                        } else {
+                            rowData.push('');
+                        }
+                    }
+                    
+                    data.push(rowData);
+                }
+                
+                return data;
+            }
+            
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message status-' + type;
+                statusMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            }
+            
+            function addNewRow() {
+                const rowCount = table.rows.length;
+                const row = table.insertRow();
+                
+                // Date
+                const dateCell = row.insertCell(0);
+                dateCell.className = 'col-date';
+                const dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateCell.appendChild(dateInput);
+                
+                // Pair
+                const pairCell = row.insertCell(1);
+                pairCell.className = 'col-pair';
+                const pairInput = document.createElement('input');
+                pairInput.type = 'text';
+                pairInput.value = 'LDOUSDT';
+                pairCell.appendChild(pairInput);
+                
+                // Entry Price
+                const entryPriceCell = row.insertCell(2);
+                entryPriceCell.className = 'col-entry';
+                const entryPriceInput = document.createElement('input');
+                entryPriceInput.type = 'number';
+                entryPriceInput.step = '0.0001';
+                entryPriceInput.addEventListener('input', function() { calculateRow(row); });
+                entryPriceCell.appendChild(entryPriceInput);
+                
+                // Capital Invested
+                const capitalCell = row.insertCell(3);
+                capitalCell.className = 'col-capital';
+                const capitalSpan = document.createElement('span');
+                capitalSpan.className = 'calculated';
+                capitalCell.appendChild(capitalSpan);
+                
+                // Profit Target
+                const profitTargetCell = row.insertCell(4);
+                profitTargetCell.className = 'col-profit-target';
+                const profitTargetInput = document.createElement('input');
+                profitTargetInput.type = 'number';
+                profitTargetInput.step = '0.01';
+                profitTargetInput.addEventListener('input', function() { calculateRow(row); });
+                profitTargetCell.appendChild(profitTargetInput);
+                
+                // % Loss (SL)
+                const lossPercentCell = row.insertCell(5);
+                lossPercentCell.className = 'col-loss-percent';
+                const lossPercentInput = document.createElement('input');
+                lossPercentInput.type = 'number';
+                lossPercentInput.step = '0.01';
+                lossPercentInput.value = '0.75';
+                lossPercentInput.addEventListener('input', function() { calculateRow(row); });
+                lossPercentCell.appendChild(lossPercentInput);
+                
+                // % Profit (TP)
+                const profitPercentCell = row.insertCell(6);
+                profitPercentCell.className = 'col-profit-percent';
+                const profitPercentInput = document.createElement('input');
+                profitPercentInput.type = 'number';
+                profitPercentInput.step = '0.01';
+                profitPercentInput.value = '1.50';
+                profitPercentInput.addEventListener('input', function() { calculateRow(row); });
+                profitPercentCell.appendChild(profitPercentInput);
+                
+                // Long SL Price
+                const longSLCell = row.insertCell(7);
+                longSLCell.className = 'col-long-sl';
+                const longSLSpan = document.createElement('span');
+                longSLSpan.className = 'calculated';
+                longSLCell.appendChild(longSLSpan);
+                
+                // Long TP Price
+                const longTPCell = row.insertCell(8);
+                longTPCell.className = 'col-long-tp';
+                const longTPSpan = document.createElement('span');
+                longTPSpan.className = 'calculated';
+                longTPCell.appendChild(longTPSpan);
+                
+                // Short SL Price
+                const shortSLCell = row.insertCell(9);
+                shortSLCell.className = 'col-short-sl';
+                const shortSLSpan = document.createElement('span');
+                shortSLSpan.className = 'calculated';
+                shortSLCell.appendChild(shortSLSpan);
+                
+                // Short TP Price
+                const shortTPCell = row.insertCell(10);
+                shortTPCell.className = 'col-short-tp';
+                const shortTPSpan = document.createElement('span');
+                shortTPSpan.className = 'calculated';
+                shortTPCell.appendChild(shortTPSpan);
+                
+                // Session High
+                const sessionHighCell = row.insertCell(11);
+                sessionHighCell.className = 'col-session-high';
+                const sessionHighInput = document.createElement('input');
+                sessionHighInput.type = 'number';
+                sessionHighInput.step = '0.0001';
+                sessionHighInput.addEventListener('input', function() { calculateRow(row); });
+                sessionHighCell.appendChild(sessionHighInput);
+                
+                // Session Low
+                const sessionLowCell = row.insertCell(12);
+                sessionLowCell.className = 'col-session-low';
+                const sessionLowInput = document.createElement('input');
+                sessionLowInput.type = 'number';
+                sessionLowInput.step = '0.0001';
+                sessionLowInput.addEventListener('input', function() { calculateRow(row); });
+                sessionLowCell.appendChild(sessionLowInput);
+                
+                // Long Outcome
+                const longOutcomeCell = row.insertCell(13);
+                longOutcomeCell.className = 'col-long-outcome';
+                const longOutcomeSpan = document.createElement('span');
+                longOutcomeSpan.className = 'calculated';
+                longOutcomeCell.appendChild(longOutcomeSpan);
+                
+                // Short Outcome
+                const shortOutcomeCell = row.insertCell(14);
+                shortOutcomeCell.className = 'col-short-outcome';
+                const shortOutcomeSpan = document.createElement('span');
+                shortOutcomeSpan.className = 'calculated';
+                shortOutcomeCell.appendChild(shortOutcomeSpan);
+                
+                // Profit Amount
+                const profitAmountCell = row.insertCell(15);
+                profitAmountCell.className = 'col-profit-amount';
+                const profitAmountSpan = document.createElement('span');
+                profitAmountSpan.className = 'calculated';
+                profitAmountCell.appendChild(profitAmountSpan);
+                
+                // Loss Amount
+                const lossAmountCell = row.insertCell(16);
+                lossAmountCell.className = 'col-loss-amount';
+                const lossAmountSpan = document.createElement('span');
+                lossAmountSpan.className = 'calculated';
+                lossAmountCell.appendChild(lossAmountSpan);
+                
+                // Actual Profit
+                const actualProfitCell = row.insertCell(17);
+                actualProfitCell.className = 'col-actual-profit';
+                const actualProfitSpan = document.createElement('span');
+                actualProfitSpan.className = 'calculated';
+                actualProfitCell.appendChild(actualProfitSpan);
+                
+                // Fees Deducted
+                const feesCell = row.insertCell(18);
+                feesCell.className = 'col-fees';
+                const feesInput = document.createElement('input');
+                feesInput.type = 'number';
+                feesInput.step = '0.01';
+                feesInput.addEventListener('input', function() { calculateRow(row); });
+                feesCell.appendChild(feesInput);
+                
+                // Notes
+                const notesCell = row.insertCell(19);
+                notesCell.className = 'col-notes';
+                const notesInput = document.createElement('input');
+                notesInput.type = 'text';
+                notesCell.appendChild(notesInput);
+                
+                // Accumulated Profit
+                const accumulatedCell = row.insertCell(20);
+                accumulatedCell.className = 'col-accumulated';
+                const accumulatedSpan = document.createElement('span');
+                accumulatedSpan.className = 'calculated';
+                accumulatedCell.appendChild(accumulatedSpan);
+                
+                // Actions
+                const actionsCell = row.insertCell(21);
+                actionsCell.className = 'col-actions';
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'btn btn-danger';
+                deleteBtn.style.width = '100%';
+                deleteBtn.style.padding = '5px';
+                deleteBtn.style.fontSize = '12px';
+                deleteBtn.addEventListener('click', function() {
+                    table.deleteRow(row.rowIndex - 1);
+                    updateSummary();
+                });
+                actionsCell.appendChild(deleteBtn);
+                
+                // Initialize calculated values
+                calculateRow(row);
+                
+                return row;
+            }
+            
+            function addNewRowWithData(data) {
+                const row = addNewRow();
+                const cells = row.cells;
+                
+                // Set data for each cell
+                for (let i = 0; i < data.length && i < cells.length - 1; i++) {
+                    const cell = cells[i];
+                    const input = cell.querySelector('input');
+                    const span = cell.querySelector('span');
+                    
+                    if (input) {
+                        input.value = data[i] || '';
+                    } else if (span) {
+                        span.textContent = data[i] || '';
+                    }
+                }
+                
+                // Recalculate the row
+                calculateRow(row);
+                
+                return row;
+            }
+            
+            function calculateRow(row) {
+                const cells = row.cells;
+                
+                // Get input values
+                const entryPrice = parseFloat(cells[2].querySelector('input').value) || 0;
+                const profitTarget = parseFloat(cells[4].querySelector('input').value) || 0;
+                const lossPercent = parseFloat(cells[5].querySelector('input').value) || 0;
+                const profitPercent = parseFloat(cells[6].querySelector('input').value) || 0;
+                const sessionHigh = parseFloat(cells[11].querySelector('input').value) || 0;
+                const sessionLow = parseFloat(cells[12].querySelector('input').value) || 0;
+                const fees = parseFloat(cells[18].querySelector('input').value) || 0;
+                
+                // Calculate Capital Invested
+                const capitalInvested = profitPercent > 0 ? profitTarget / (profitPercent / 100) : 0;
+                cells[3].querySelector('span').textContent = capitalInvested.toFixed(2);
+                
+                // Calculate Long SL Price
+                const longSLPrice = entryPrice > 0 && lossPercent > 0 ? entryPrice * (1 - lossPercent / 100) : 0;
+                cells[7].querySelector('span').textContent = longSLPrice.toFixed(4);
+                
+                // Calculate Long TP Price
+                const longTPPrice = entryPrice > 0 && profitPercent > 0 ? entryPrice * (1 + profitPercent / 100) : 0;
+                cells[8].querySelector('span').textContent = longTPPrice.toFixed(4);
+                
+                // Calculate Short SL Price
+                const shortSLPrice = entryPrice > 0 && lossPercent > 0 ? entryPrice * (1 + lossPercent / 100) : 0;
+                cells[9].querySelector('span').textContent = shortSLPrice.toFixed(4);
+                
+                // Calculate Short TP Price
+                const shortTPPrice = entryPrice > 0 && profitPercent > 0 ? entryPrice * (1 - profitPercent / 100) : 0;
+                cells[10].querySelector('span').textContent = shortTPPrice.toFixed(4);
+                
+                // Calculate Long Outcome
+                let longOutcome = '';
+                if (sessionLow > 0 && longSLPrice > 0 && sessionLow <= longSLPrice) {
+                    longOutcome = 'SL';
+                } else if (sessionHigh > 0 && longTPPrice > 0 && sessionHigh >= longTPPrice) {
+                    longOutcome = 'TP';
+                } else if (sessionHigh > 0 && sessionLow > 0 && longSLPrice > 0 && longTPPrice > 0) {
+                    longOutcome = 'No Hit';
+                }
+                cells[13].querySelector('span').textContent = longOutcome;
+                
+                // Calculate Short Outcome
+                let shortOutcome = '';
+                if (sessionHigh > 0 && shortSLPrice > 0 && sessionHigh >= shortSLPrice) {
+                    shortOutcome = 'SL';
+                } else if (sessionLow > 0 && shortTPPrice > 0 && sessionLow <= shortTPPrice) {
+                    shortOutcome = 'TP';
+                } else if (sessionHigh > 0 && sessionLow > 0 && shortSLPrice > 0 && shortTPPrice > 0) {
+                    shortOutcome = 'No Hit';
+                }
+                cells[14].querySelector('span').textContent = shortOutcome;
+                
+                // Calculate Profit Amount
+                let profitAmount = 0;
+                if (longOutcome === 'TP' || shortOutcome === 'TP') {
+                    profitAmount = capitalInvested * (profitPercent / 100);
+                }
+                cells[15].querySelector('span').textContent = profitAmount.toFixed(2);
+                
+                // Calculate Loss Amount
+                let lossAmount = 0;
+                if (longOutcome === 'SL' || shortOutcome === 'SL') {
+                    lossAmount = capitalInvested * (lossPercent / 100);
+                }
+                cells[16].querySelector('span').textContent = lossAmount.toFixed(2);
+                
+                // Calculate Actual Profit
+                const actualProfit = profitAmount - lossAmount;
+                cells[17].querySelector('span').textContent = actualProfit.toFixed(2);
+                
+                // Calculate Accumulated Profit
+                let accumulatedProfit = actualProfit - fees;
+                if (row.rowIndex > 1) {
+                    const prevRow = table.rows[row.rowIndex - 2];
+                    const prevAccumulated = parseFloat(prevRow.cells[20].querySelector('span').textContent) || 0;
+                    accumulatedProfit += prevAccumulated;
+                }
+                cells[20].querySelector('span').textContent = accumulatedProfit.toFixed(2);
+                
+                // Update summary
+                updateSummary();
+            }
+            
+            function calculateAll() {
+                for (let i = 0; i < table.rows.length; i++) {
+                    calculateRow(table.rows[i]);
+                }
+            }
+            
+            function clearAll() {
+                if (confirm('Are you sure you want to clear all data?')) {
+                    table.innerHTML = '';
+                    updateSummary();
+                }
+            }
+            
+            function updateSummary() {
+                let totalTrades = 0;
+                let wins = 0;
+                let totalProfit = 0;
+                let totalLoss = 0;
+                
+                for (let i = 0; i < table.rows.length; i++) {
+                    const row = table.rows[i];
+                    const longOutcome = row.cells[13].querySelector('span').textContent;
+                    const shortOutcome = row.cells[14].querySelector('span').textContent;
+                    const profitAmount = parseFloat(row.cells[15].querySelector('span').textContent) || 0;
+                    const lossAmount = parseFloat(row.cells[16].querySelector('span').textContent) || 0;
+                    
+                    if (longOutcome !== '' || shortOutcome !== '') {
+                        totalTrades++;
+                        if (longOutcome === 'TP' || shortOutcome === 'TP') {
+                            wins++;
+                        }
+                        totalProfit += profitAmount;
+                        totalLoss += lossAmount;
+                    }
+                }
+                
+                const winRate = totalTrades > 0 ? (wins / totalTrades * 100).toFixed(2) : 0;
+                const netProfit = totalProfit - totalLoss;
+                
+                document.getElementById('totalTrades').textContent = totalTrades;
+                document.getElementById('winRate').textContent = winRate + '%';
+                document.getElementById('totalProfit').textContent = '$' + totalProfit.toFixed(2);
+                document.getElementById('totalLoss').textContent = '$' + totalLoss.toFixed(2);
+                document.getElementById('netProfit').textContent = '$' + netProfit.toFixed(2);
+                
+                // Update colors based on positive/negative values
+                document.getElementById('netProfit').className = 'summary-value ' + (netProfit >= 0 ? 'net-profit' : 'total-loss');
+            }
+            
+            function exportData() {
+                let csv = [];
+                const headers = [];
+                
+                // Get headers
+                for (let i = 0; i < table.rows[0].cells.length - 1; i++) {
+                    headers.push(table.rows[0].cells[i].textContent);
+                }
+                csv.push(headers.join(','));
+                
+                // Get data
+                for (let i = 0; i < table.rows.length; i++) {
+                    const row = table.rows[i];
+                    const rowData = [];
+                    
+                    for (let j = 0; j < row.cells.length - 1; j++) {
+                        const cell = row.cells[j];
+                        const input = cell.querySelector('input');
+                        const span = cell.querySelector('span');
+                        
+                        if (input) {
+                            rowData.push(input.value);
+                        } else if (span) {
+                            rowData.push(span.textContent);
+                        } else {
+                            rowData.push('');
+                        }
+                    }
+                    
+                    csv.push(rowData.join(','));
+                }
+                
+                // Create download link
+                const csvContent = 'data:text/csv;charset=utf-8,' + csv.join('\n');
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement('a');
+                link.setAttribute('href', encodedUri);
+                link.setAttribute('download', 'backtest_data.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // Load Google API
+            window.onload = function() {
+                // These values need to be replaced with your actual API key and Client ID
+                gapi.load('client', gapiLoaded);
+                google.accounts.oauth2.initTokenClient({
+                    client_id: 'YOUR_CLIENT_ID', // Replace with your client ID
+                    scope: 'https://www.googleapis.com/auth/spreadsheets',
+                    callback: '', // defined later
+                });
+                gisLoaded();
+            };
+        });
+    </script>
+</body>
+</html>
